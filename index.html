@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vriddhi Investments - OTP Verification</title>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f2ff;
+      color: #333;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: auto;
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      text-align: center;
+    }
+
+    img.logo {
+      width: 120px;
+      float: left;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #6c2bd9;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #6c2bd9;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #5522b5;
+    }
+
+    #recaptcha-container {
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <img src="Wealthy Logo.jpeg" class="logo" alt="Wealthy Logo" />
+  <div class="container">
+    <h1>Verify Your Mobile Number</h1>
+    <input type="text" id="phoneNumber" placeholder="+91XXXXXXXXXX" />
+    <div id="recaptcha-container"></div>
+    <button onclick="sendOTP()">Send OTP</button>
+
+    <div id="otpSection" style="display:none;">
+      <input type="text" id="otp" placeholder="Enter OTP" />
+      <button onclick="verifyOTP()">Verify OTP</button>
+    </div>
+
+    <p id="status"></p>
+  </div>
+
+  <script>
+    // TODO: Replace with your Firebase config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'normal',
+      callback: () => console.log("Recaptcha verified"),
+    });
+
+    function sendOTP() {
+      const phone = document.getElementById("phoneNumber").value;
+      firebase.auth().signInWithPhoneNumber(phone, window.recaptchaVerifier)
+        .then((confirmationResult) => {
+          window.confirmationResult = confirmationResult;
+          document.getElementById("otpSection").style.display = "block";
+          document.getElementById("status").innerText = "OTP sent!";
+        })
+        .catch((error) => {
+          document.getElementById("status").innerText = "Error sending OTP: " + error.message;
+        });
+    }
+
+    function verifyOTP() {
+      const otp = document.getElementById("otp").value;
+      window.confirmationResult.confirm(otp)
+        .then((result) => {
+          document.getElementById("status").innerText = "Verified successfully!";
+        })
+        .catch((error) => {
+          document.getElementById("status").innerText = "Invalid OTP.";
+        });
+    }
+  </script>
+</body>
+</html>
