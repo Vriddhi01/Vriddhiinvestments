@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vriddhi Investments - OTP Verification</title>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.5.0/firebase-auth-compat.js"></script>
+  <title>Vriddhi Investments - SIP Calculator</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -58,92 +56,42 @@
       background-color: #5522b5;
     }
 
-    #recaptcha-container {
-      margin: 10px 0;
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+      color: #333;
     }
   </style>
 </head>
 <body>
   <img src="Wealthy Logo.jpeg" class="logo" alt="Wealthy Logo" />
   <div class="container">
-    <h1>Verify Your Mobile Number</h1>
-    <input type="text" id="phoneNumber" placeholder="+91XXXXXXXXXX" />
-    <div id="recaptcha-container"></div>
-    <button onclick="sendOTP()">Send OTP</button>
+    <h1>SIP Calculator</h1>
 
-    <div id="otpSection" style="display:none;">
-      <input type="text" id="otp" placeholder="Enter OTP" />
-      <button onclick="verifyOTP()">Verify OTP</button>
-    </div>
+    <!-- SIP Calculator Inputs -->
+    <input type="number" id="monthlyInvestment" placeholder="Monthly Investment (₹)" />
+    <input type="number" id="investmentPeriod" placeholder="Investment Period (years)" />
+    <input type="number" id="expectedReturn" placeholder="Expected Annual Return (%)" />
 
-    <p id="status"></p>
+    <button onclick="calculateSIP()">Calculate</button>
+
+    <p id="result"></p>
   </div>
 
   <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_AEeqhK8tkkPL61lUPfE59ywlo7AFln8",
-      authDomain: "vriddhi-investments-otp.firebaseapp.com",
-      projectId: "vriddhi-investments-otp",
-      storageBucket: "vriddhi-investments-otp.appspot.com",
-      messagingSenderId: "88622908260",
-      appId: "1:88622908260:web:bf3b025160d9680ca2b071",
-      measurementId: "G-XM4SY552F4"
-    };
+    // Your existing SIP calculation logic goes here
+    function calculateSIP() {
+      const P = parseFloat(document.getElementById("monthlyInvestment").value);
+      const N = parseFloat(document.getElementById("investmentPeriod").value) * 12;
+      const r = parseFloat(document.getElementById("expectedReturn").value) / 100 / 12;
 
-    window.onload = function () {
-      // Initialize Firebase
-      firebase.initializeApp(firebaseConfig);
-
-      // Set up reCAPTCHA
-      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-        size: 'normal',
-        callback: function(response) {
-          console.log("Recaptcha solved");
-        },
-        'expired-callback': function() {
-          console.log("Recaptcha expired");
-        }
-      });
-
-      recaptchaVerifier.render().then(function(widgetId) {
-        window.recaptchaWidgetId = widgetId;
-      });
-    };
-
-    function sendOTP() {
-      const phone = document.getElementById("phoneNumber").value;
-      if (!phone.startsWith("+91") || phone.length < 13) {
-        document.getElementById("status").innerText = "Please enter a valid phone number with +91";
+      if (isNaN(P) || isNaN(N) || isNaN(r)) {
+        document.getElementById("result").innerText = "Please fill in all fields correctly.";
         return;
       }
 
-      firebase.auth().signInWithPhoneNumber(phone, window.recaptchaVerifier)
-        .then((confirmationResult) => {
-          window.confirmationResult = confirmationResult;
-          document.getElementById("otpSection").style.display = "block";
-          document.getElementById("status").innerText = "OTP sent!";
-        })
-        .catch((error) => {
-          console.error("Error during sendOTP:", error);
-          document.getElementById("status").innerText = "Error sending OTP: " + error.message;
-        });
-    }
-
-    function verifyOTP() {
-      const otp = document.getElementById("otp").value;
-      if (!window.confirmationResult) {
-        document.getElementById("status").innerText = "Please request an OTP first.";
-        return;
-      }
-
-      window.confirmationResult.confirm(otp)
-        .then((result) => {
-          document.getElementById("status").innerText = "Verified successfully!";
-        })
-        .catch((error) => {
-          console.error("Error during verifyOTP:", error);
-          document.getElementById("status").innerText = "Invalid OTP.";
-        });
+      const FV = P * ((Math.pow(1 + r, N) - 1) / r) * (1 + r);
+      document.getElementById("result").innerText = "Future Value: ₹" + FV.toFixed(2);
     }
   </script>
 </body>
