@@ -80,28 +80,43 @@
   </div>
 
   <script>
-    // TODO: Replace with your Firebase config
     const firebaseConfig = {
-  apiKey: "AIza	SyA_AEeqhK8tkkPL61lUPfE59ywlo7AFln8",
-  authDomain: "vriddhi-investments-otp.firebaseapp.com",
-  projectId: "vriddhi-investments-otp",
-  storageBucket: "vriddhi-investments-otp.firebasestorage.app",
-  messagingSenderId: "88622908260",
-  appId: "1:88622908260:web:bf3b025160d9680ca2b071",
-  measurementId: "G-XM4SY552F4"
-};
-
+      apiKey: "AIzaSyA_AEeqhK8tkkPL61lUPfE59ywlo7AFln8",
+      authDomain: "vriddhi-investments-otp.firebaseapp.com",
+      projectId: "vriddhi-investments-otp",
+      storageBucket: "vriddhi-investments-otp.appspot.com",
+      messagingSenderId: "88622908260",
+      appId: "1:88622908260:web:bf3b025160d9680ca2b071",
+      measurementId: "G-XM4SY552F4"
     };
 
-    firebase.initializeApp(firebaseConfig);
+    window.onload = function () {
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
 
-    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
-      size: 'normal',
-      callback: () => console.log("Recaptcha verified"),
-    });
+      // Set up reCAPTCHA
+      window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+        size: 'normal',
+        callback: function(response) {
+          console.log("Recaptcha solved");
+        },
+        'expired-callback': function() {
+          console.log("Recaptcha expired");
+        }
+      });
+
+      recaptchaVerifier.render().then(function(widgetId) {
+        window.recaptchaWidgetId = widgetId;
+      });
+    };
 
     function sendOTP() {
       const phone = document.getElementById("phoneNumber").value;
+      if (!phone.startsWith("+91") || phone.length < 13) {
+        document.getElementById("status").innerText = "Please enter a valid phone number with +91";
+        return;
+      }
+
       firebase.auth().signInWithPhoneNumber(phone, window.recaptchaVerifier)
         .then((confirmationResult) => {
           window.confirmationResult = confirmationResult;
@@ -109,17 +124,24 @@
           document.getElementById("status").innerText = "OTP sent!";
         })
         .catch((error) => {
+          console.error("Error during sendOTP:", error);
           document.getElementById("status").innerText = "Error sending OTP: " + error.message;
         });
     }
 
     function verifyOTP() {
       const otp = document.getElementById("otp").value;
+      if (!window.confirmationResult) {
+        document.getElementById("status").innerText = "Please request an OTP first.";
+        return;
+      }
+
       window.confirmationResult.confirm(otp)
         .then((result) => {
           document.getElementById("status").innerText = "Verified successfully!";
         })
         .catch((error) => {
+          console.error("Error during verifyOTP:", error);
           document.getElementById("status").innerText = "Invalid OTP.";
         });
     }
