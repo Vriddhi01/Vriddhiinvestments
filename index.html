@@ -149,7 +149,7 @@
       const bankFV = P * ((Math.pow(1 + bankRate, N) - 1) / bankRate) * (1 + bankRate);
       const bankLoss = FV - bankFV;
       document.getElementById("comparison").innerHTML =
-        "Bank Savings AC interest rate @3.5%: " + formatCurrencyINR(bankFV) + "<br/>" +
+        "Bank Savings account interest rate @3.5%: " + formatCurrencyINR(bankFV) + "<br/>" +
         "You lose " + formatCurrencyINR(bankLoss) + " by choosing Bank over Mutual Fund.";
 
       showDelayLosses(P, Y, r, FV);
