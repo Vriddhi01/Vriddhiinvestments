@@ -14,7 +14,7 @@
     }
 
     .container {
-      max-width: 500px;
+      max-width: 600px;
       margin: auto;
       background-color: #fff;
       border-radius: 12px;
@@ -56,10 +56,36 @@
       background-color: #5522b5;
     }
 
-    #result {
+    #result, #comparison, #cta {
       margin-top: 20px;
       font-weight: bold;
       color: #333;
+    }
+
+    a.cta-link {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 10px 15px;
+      background-color: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    .delay-box {
+      margin-top: 10px;
+      background: #f0ebff;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    a.dhan-link {
+      display: inline-block;
+      margin-top: 15px;
+      color: #6c2bd9;
+      text-decoration: underline;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -68,7 +94,6 @@
   <div class="container">
     <h1>SIP Calculator</h1>
 
-    <!-- SIP Calculator Inputs -->
     <input type="number" id="monthlyInvestment" placeholder="Monthly Investment (₹)" />
     <input type="number" id="investmentPeriod" placeholder="Investment Period (years)" />
     <input type="number" id="expectedReturn" placeholder="Expected Annual Return (%)" />
@@ -76,22 +101,59 @@
     <button onclick="calculateSIP()">Calculate</button>
 
     <p id="result"></p>
+    <p id="comparison"></p>
+
+    <div id="cta" style="display:none;">
+      <h3>Delaying your SIP costs you:</h3>
+      <div class="delay-box" id="loss1yr"></div>
+      <div class="delay-box" id="loss2yr"></div>
+      <div class="delay-box" id="loss3yr"></div>
+
+      <a href="https://wa.me/918450925855" target="_blank" class="cta-link">Chat with Us on WhatsApp</a><br />
+      <a href="https://dhan.co/mutual-funds/mf-to-invest/best-performing-mutual-funds/" target="_blank" class="dhan-link">Explore Best Mutual Funds on Dhan</a>
+    </div>
   </div>
 
   <script>
-    // Your existing SIP calculation logic goes here
     function calculateSIP() {
       const P = parseFloat(document.getElementById("monthlyInvestment").value);
-      const N = parseFloat(document.getElementById("investmentPeriod").value) * 12;
+      const Y = parseFloat(document.getElementById("investmentPeriod").value);
+      const N = Y * 12;
       const r = parseFloat(document.getElementById("expectedReturn").value) / 100 / 12;
 
       if (isNaN(P) || isNaN(N) || isNaN(r)) {
         document.getElementById("result").innerText = "Please fill in all fields correctly.";
+        document.getElementById("comparison").innerText = "";
+        document.getElementById("cta").style.display = "none";
         return;
       }
 
       const FV = P * ((Math.pow(1 + r, N) - 1) / r) * (1 + r);
       document.getElementById("result").innerText = "Future Value: ₹" + FV.toFixed(2);
+
+      // Bank comparison
+      const bankRate = 3.5 / 100 / 12;
+      const bankFV = P * ((Math.pow(1 + bankRate, N) - 1) / bankRate) * (1 + bankRate);
+      document.getElementById("comparison").innerText = "If invested in a bank @3.5%, you'd get ₹" + bankFV.toFixed(2);
+
+      // CTA logic: Delay losses
+      showDelayLosses(P, Y, r, FV);
+    }
+
+    function showDelayLosses(P, Y, r, fvNow) {
+      const delayYears = [1, 2, 3];
+      delayYears.forEach(function(delay) {
+        const newN = (Y - delay) * 12;
+        if (newN <= 0) {
+          document.getElementById("loss" + delay + "yr").innerText = `Delaying by ${delay} year(s) means zero corpus!`;
+          return;
+        }
+        const fvDelayed = P * ((Math.pow(1 + r, newN) - 1) / r) * (1 + r);
+        const loss = fvNow - fvDelayed;
+        document.getElementById("loss" + delay + "yr").innerText = `Start after ${delay} year(s): You lose ₹${loss.toFixed(2)}`;
+      });
+
+      document.getElementById("cta").style.display = "block";
     }
   </script>
 </body>
