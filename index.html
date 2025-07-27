@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vriddhi Investments - SIP Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -87,6 +88,10 @@
       text-decoration: underline;
       font-weight: bold;
     }
+
+    canvas {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -109,12 +114,21 @@
       <div class="delay-box" id="loss2yr"></div>
       <div class="delay-box" id="loss3yr"></div>
 
+      <!-- Bar chart container -->
+      <canvas id="delayChart" width="400" height="250"></canvas>
+
       <a href="https://wa.me/918450925855" target="_blank" class="cta-link">Chat with Us on WhatsApp</a><br />
       <a href="https://dhan.co/mutual-funds/mf-to-invest/best-performing-mutual-funds/" target="_blank" class="dhan-link">Explore Best Mutual Funds on Dhan</a>
     </div>
   </div>
 
   <script>
+    let chartRef = null;
+
+    function formatCurrencyINR(value) {
+      return "₹" + value.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
     function calculateSIP() {
       const P = parseFloat(document.getElementById("monthlyInvestment").value);
       const Y = parseFloat(document.getElementById("investmentPeriod").value);
@@ -129,31 +143,79 @@
       }
 
       const FV = P * ((Math.pow(1 + r, N) - 1) / r) * (1 + r);
-      document.getElementById("result").innerText = "Future Value: ₹" + FV.toFixed(2);
+      document.getElementById("result").innerText = "Future Value: " + formatCurrencyINR(FV);
 
-      // Bank comparison
       const bankRate = 3.5 / 100 / 12;
       const bankFV = P * ((Math.pow(1 + bankRate, N) - 1) / bankRate) * (1 + bankRate);
-      document.getElementById("comparison").innerText = "If invested in a bank @3.5%, you'd get ₹" + bankFV.toFixed(2);
+      const bankLoss = FV - bankFV;
+      document.getElementById("comparison").innerHTML =
+        "Bank FD Value @3.5%: " + formatCurrencyINR(bankFV) + "<br/>" +
+        "You lose " + formatCurrencyINR(bankLoss) + " by choosing Bank over Mutual Fund.";
 
-      // CTA logic: Delay losses
       showDelayLosses(P, Y, r, FV);
     }
 
     function showDelayLosses(P, Y, r, fvNow) {
       const delayYears = [1, 2, 3];
+      const losses = [];
+
       delayYears.forEach(function(delay) {
         const newN = (Y - delay) * 12;
+        const lossDiv = document.getElementById("loss" + delay + "yr");
+
         if (newN <= 0) {
-          document.getElementById("loss" + delay + "yr").innerText = `Delaying by ${delay} year(s) means zero corpus!`;
+          lossDiv.innerText = `Delaying by ${delay} year(s) means zero corpus!`;
+          losses.push(0);
           return;
         }
+
         const fvDelayed = P * ((Math.pow(1 + r, newN) - 1) / r) * (1 + r);
         const loss = fvNow - fvDelayed;
-        document.getElementById("loss" + delay + "yr").innerText = `Start after ${delay} year(s): You lose ₹${loss.toFixed(2)}`;
+        losses.push(loss);
+        lossDiv.innerText = `Start after ${delay} year(s): You lose ${formatCurrencyINR(loss)}`;
       });
 
       document.getElementById("cta").style.display = "block";
+      renderChart(losses);
+    }
+
+    function renderChart(losses) {
+      const ctx = document.getElementById('delayChart').getContext('2d');
+      if (chartRef) {
+        chartRef.destroy();
+      }
+
+      chartRef = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['1 Year Delay', '2 Years Delay', '3 Years Delay'],
+          datasets: [{
+            label: 'Loss Due to Delay (₹)',
+            data: losses,
+            backgroundColor: ['#d33682', '#cb4b16', '#6c71c4']
+          }]
+        },
+        options: {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (ctx) => formatCurrencyINR(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: value => formatCurrencyINR(value)
+              },
+              title: {
+                display: true,
+                text: 'Loss (₹)'
+              }
+            }
+          }
+        }
+      });
     }
   </script>
 </body>
